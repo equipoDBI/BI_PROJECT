@@ -34,11 +34,11 @@ initDate = datetime.date(2023, 1, 1)
 
 endDate = st.date_input(
     "Seleccione la fecha de inicio",
-    datetime.date(2023, 1, 12))
-st.write('Fecha Fin: ', endDate)
+    datetime.date(2023, 1, 11))
+st.write('Fecha Fin: ', endDate + datetime.timedelta(days=1))
 
 
-st.table(noNormalizedData(initDate, endDate))
+st.table(noNormalizedData(initDate, endDate + datetime.timedelta(days=1)))
 
 
 container = st.container()

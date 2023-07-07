@@ -126,7 +126,7 @@ def noNormalizedData(fechaInicio, fechaFin):
     df = pd.merge(df, PEN_X_data, on = 'Date')
     df = pd.merge(df, BZ_F_data, on = 'Date')
     df = df.drop(['Volume_PEN_X'], axis=1)
-    return df.tail()
+    return df.tail(5)
 
 def predict(model, data):
     df = model.predict(data)
