@@ -18,7 +18,7 @@ streamlit_style = """
 			"""
 st.markdown(streamlit_style, unsafe_allow_html=True)
 with st.sidebar:
-    image = Image.open('prod/FONDO.png')
+    image = Image.open('./BusinessIntelligence.png')
     st.image(image)
     selected = option_menu(
         menu_title="Menú",
@@ -34,6 +34,8 @@ with st.sidebar:
     )
 if selected == "Inicio":
     st.title("Sistema de Inteligencia para Bolsa de Valores - Equipo D")
+    image = Image.open('./MachineLearningStocksMarket.png')
+    st.image(image)
     st.markdown('**Curso:** Inteligencia de Negocios')
     st.markdown('**Docente Nombrado:** Ernesto Cancho')
     st.markdown('**Integrantes:**')
