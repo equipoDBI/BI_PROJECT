@@ -18,8 +18,8 @@ streamlit_style = """
 			"""
 st.markdown(streamlit_style, unsafe_allow_html=True)
 with st.sidebar:
-    # image = Image.open('/FONDO.png')
-    # st.image(image)
+    image = Image.open('prod/FONDO.png')
+    st.image(image)
     selected = option_menu(
         menu_title="Menú",
         options=["Inicio", "LSTM", "SVC", "SVR", "Clustering K-Means"],
