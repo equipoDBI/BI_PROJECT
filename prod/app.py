@@ -37,6 +37,7 @@ if selected == "Inicio":
     st.image(image)
     st.markdown('**Curso:** Inteligencia de Negocios')
     st.markdown('**Docente Nombrado:** Ernesto Cancho')
+    st.markdown('**Equipo:** Equipo D')
     st.markdown('**Integrantes:**')
     st.markdown('*   Hurtado Santos, Estiven Salvador - 20200135')
     st.markdown('*   López Terrones, Ximena Xiomy - 20200020')
