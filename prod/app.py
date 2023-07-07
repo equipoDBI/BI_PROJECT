@@ -48,12 +48,6 @@ if selected == "Inicio":
     st.markdown('*   Cespedes Flores, Sebastian - 1820025')
 if selected == "LSTM":
     st.title("Modelo de predicción LSTM")
-    tickerSymbol = 'GOOGL'
-    tickerData = yf.Ticker(tickerSymbol)
-    tickerDf = tickerData.history(
-        period='1d', start='2010-5-31', end='2020-5-31')
-    st.line_chart(tickerDf.Close)
-    st.line_chart(tickerDf.Volume)
 if selected == "SVC":
     st.title("Modelo de predicción SVC")
     st.header('1. Entrenamiento')
@@ -85,10 +79,42 @@ if selected == "SVC":
     st.subheader('2.3. Predicciones')
     container = st.container()
     resultados = hacerPrediccion(instrumentoFinanciero, fechaInicioEntrenamiento,
-                                 fechaFinEntrenamiento, fechaInicioPrediccion, fechaFinPrediccion)
+                                 fechaFinEntrenamiento, fechaInicioPrediccion, fechaFinPrediccion, selected)
     for i in resultados:
         st.write(i)
 if selected == "SVR":
     st.title("Modelo de predicción SVR")
+    st.header('1. Entrenamiento')
+    st.subheader('1.1. Ingreso de datos')
+    instrumentoFinanciero = st.text_input(
+        'Instrumento Financiero', 'BVN', key="placeholder")
+    fechaInicioEntrenamiento = st.date_input(
+        "Fecha inicio para el entrenamiento", datetime.date(2018, 1, 1))
+    fechaFinEntrenamiento = st.date_input(
+        "Fecha fin para el entrenamiento", datetime.date(2022, 1, 1))
+    dataParaEntrenamiento = obtenerData(
+        instrumentoFinanciero, fechaInicioEntrenamiento, fechaFinEntrenamiento)
+    st.subheader('1.2. Visualización')
+    st.table(dataParaEntrenamiento.head(10))
+    st.subheader('1.3. HeatMap')
+    st.write(plotHeatMap(dataParaEntrenamiento))
+    st.header('2. Predicción')
+    st.subheader('2.1. Ingreso de datos')
+    fechaInicioPrediccion = st.date_input(
+        "Fecha inicio para la predicción",
+        datetime.date(2023, 6, 8))
+    fechaFinPrediccion = st.date_input(
+        "Fecha fin para la predicción",
+        datetime.date(2023, 7, 7))
+    dataParaPrediccion = obtenerData(
+        instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion)
+    st.subheader('2.2. Visualización')
+    st.table(dataParaPrediccion.tail(10))
+    st.subheader('2.3. Predicciones')
+    container = st.container()
+    resultados = hacerPrediccion(instrumentoFinanciero, fechaInicioEntrenamiento,
+                                 fechaFinEntrenamiento, fechaInicioPrediccion, fechaFinPrediccion, selected)
+    for i in resultados:
+        st.write(i)
 if selected == "Clustering K-Means":
     st.title("Modelo de predicción Clustering K-Means")

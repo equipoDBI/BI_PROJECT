@@ -9,8 +9,9 @@ from scipy.stats import norm
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
-from sklearn.svm import SVC
+from sklearn.svm import SVC, SVR
 from sklearn.metrics import accuracy_score
+from scipy.ndimage import shift
 # Importamos la librería nueva
 import yfinance as yf
 
@@ -47,42 +48,68 @@ def obtenerData(instrumentoFinanciero, fechaInicio, fechaFin):
     return df
 
 
-def transformarDataEntradaADataPrediccion(instrumentoFinanciero, fechaInicio, fechaFin):
+def transformarDataEntradaADataPrediccion(instrumentoFinanciero, fechaInicio, fechaFin, modelo):
     df = obtenerData(instrumentoFinanciero, fechaInicio, fechaFin)
     nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
-    df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
-    df['Return'] = df['Return'].fillna(0)
-    df['Trend'] = np.where(df['Return'] > 0.00, 1, 0)
-    df['Trend'] = df['Trend'].shift(-1)
-    df['Trend'] = df['Trend'].fillna(0)
-    df = df.dropna(how='any')
     escala = StandardScaler()
-    X = escala.fit_transform(df.drop(['Trend', 'Return'], axis=1))
-    y = df['Trend']
+    if modelo == "SVR":
+        df = df.dropna(how='any')
+        X = escala.fit_transform(
+            df.drop([nombreCloseInstrumentoFinanciero], axis=1))
+        y = df[nombreCloseInstrumentoFinanciero]
+    if modelo == "SVC":
+        df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
+        df['Return'] = df['Return'].fillna(0)
+        df['Trend'] = np.where(df['Return'] > 0.00, 1, 0)
+        df['Trend'] = df['Trend'].shift(-1)
+        df['Trend'] = df['Trend'].fillna(0)
+        df = df.dropna(how='any')
+        X = escala.fit_transform(df.drop(['Trend', 'Return'], axis=1))
+        y = df['Trend']
     return X, y
 
 
-def obtenerModeloSVC(instrumentoFinanciero, fechaInicio, fechaFin):
+def obtenerModelo(instrumentoFinanciero, fechaInicio, fechaFin, modelo):
     X, y = transformarDataEntradaADataPrediccion(
-        instrumentoFinanciero, fechaInicio, fechaFin)
-    modeloSVC = SVC().fit(X, y)
-    joblib.dump(modeloSVC, 'svc.pkl')
-    pklModeloSVC = joblib.load('prod/svc.pkl')
-    return pklModeloSVC
+        instrumentoFinanciero, fechaInicio, fechaFin, modelo)
+    if modelo == "SVC":
+        modeloEntrenado = SVC().fit(X, y)
+    if modelo == "SVR":
+        modeloEntrenado = SVR().fit(X, y)
+    joblib.dump(modeloEntrenado, modelo + '.pkl')
+    pklModelo = joblib.load("prod/" + modelo + '.pkl')
+    return pklModelo
 
 
-def hacerPrediccion(instrumentoFinanciero, fechaInicioEntrenamiento, fechaFinEntrenamiento, fechaInicioPrediccion, fechaFinPrediccion):
-    modelo = obtenerModeloSVC(instrumentoFinanciero,
-                              fechaInicioEntrenamiento, fechaFinEntrenamiento)
+def pct_change_numpy(arreglo):
+    arreglo_pct_change = []
+    for i in range(len(arreglo)):
+        arreglo_pct_change[i] = (arreglo[i] - arreglo[i-1])/arreglo[i]
+
+
+def hacerPrediccion(instrumentoFinanciero, fechaInicioEntrenamiento, fechaFinEntrenamiento, fechaInicioPrediccion, fechaFinPrediccion, modelo):
+    modeloEntrenado = obtenerModelo(instrumentoFinanciero,
+                                    fechaInicioEntrenamiento, fechaFinEntrenamiento, modelo)
     X, y = transformarDataEntradaADataPrediccion(
-        instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion)
-    resultado = modelo.predict(X)
+        instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo)
+    resultado = modeloEntrenado.predict(X)
     texto = []
     listaFechas = [(fechaInicioPrediccion + timedelta(days=d)).strftime("%Y-%m-%d")
                    for d in range((fechaFinPrediccion - fechaInicioPrediccion).days + 1)]
-    for i in range(0, resultado.size):
-        texto.append("*   Compra acciones el día " +
-                     listaFechas[i] if resultado[i] > 0 else "*   No compres acciones el día " + listaFechas[i])
+    if modelo == "SVC":
+        for i in range(0, resultado.size):
+            texto.append("*   Compra acciones el día " +
+                         listaFechas[i] if resultado[i] > 0 else "*   No compres acciones el día " + listaFechas[i])
+    if modelo == "SVR":
+        resultado = pd.Series(resultado)
+        retorno = resultado.pct_change()
+        retorno = retorno.fillna(0)
+        trend = np.where(retorno > 0.00, 1, 0)
+        trend = shift(trend, -1, cval=np.NaN)
+        trend = np.nan_to_num(trend)
+        for i in range(0, trend.size):
+            texto.append("*   Compra acciones el día " +
+                         listaFechas[i] if trend[i] > 0 else "*   No compres acciones el día " + listaFechas[i])
     return texto
 
 
