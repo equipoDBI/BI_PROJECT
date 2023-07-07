@@ -1,3 +1,6 @@
+streamlit
+PIL
+streamlit_option_menu
 joblib
 pandas
 datetime
