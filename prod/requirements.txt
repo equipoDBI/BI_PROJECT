@@ -1,9 +1,9 @@
 streamlit
-PIL
+Pillow
 streamlit_option_menu
 joblib
 pandas
-datetime
+DateTime
 numpy
 matplotlib
 seaborn
