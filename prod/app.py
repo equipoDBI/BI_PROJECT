@@ -36,7 +36,7 @@ if selected == "Inicio":
     st.title("Sistema de Inteligencia para Bolsa de Valores - Equipo D")
     st.markdown('**Curso:** Inteligencia de Negocios')
     st.markdown('**Docente Nombrado:** Ernesto Cancho')
-    st.markdown('**Integrantes:**')    
+    st.markdown('**Integrantes:**')
     st.markdown('*   Hurtado Santos, Estiven Salvador - 20200135')
     st.markdown('*   López Terrones, Ximena Xiomy - 20200020')
     st.markdown('*   Llactahuaman Muguerza, Anthony Joel - 20200091')
@@ -56,7 +56,7 @@ if selected == "SVC":
     st.title("Modelo de predicción SVC")
     st.header('Modelo Predictivo para BUENAVENTURA con SVC')
     st.markdown('En este apartado se explicará el modelo predictivo usado para realizar un sistema de recomendación para las acciones de Buenaventura')
-    datForTraining=trainingData()
+    datForTraining = trainingData()
     st.table(datForTraining)
     st.header('HeatMap')
     st.write(plotHeatMap(datForTraining))
@@ -73,23 +73,3 @@ if selected == "SVR":
     st.title("Modelo de predicción SVR")
 if selected == "Clustering K-Means":
     st.title("Modelo de predicción Clustering K-Means")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Now insert some more in the container
