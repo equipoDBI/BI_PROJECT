@@ -5,5 +5,5 @@ numpy
 matplotlib
 seaborn
 scipy
-sklearn
+scikit-learn
 yfinance
