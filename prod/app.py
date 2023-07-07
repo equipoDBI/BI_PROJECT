@@ -10,7 +10,7 @@ streamlit_style = """
 			html, body, [class*="css"]  {
 			    font-family: 'Poppins', sans-serif;
 			}
-            .css-vk3wp9 {
+            .css-vk3wp9, .css-1544g2n, .css-6qob1r {
                 background-image: linear-gradient(#7bf6f7,#7bf6f7);
                 color: white;
             }
