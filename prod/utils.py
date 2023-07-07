@@ -1,6 +1,6 @@
 import joblib
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -15,17 +15,10 @@ from sklearn.metrics import accuracy_score
 import yfinance as yf
 
 
-def loadModelo(ruta):
-    modelo = joblib.load(ruta)
-    return modelo
-
-
-def trainingData():
-    fechaInicio = '2018-01-01'
-    fechaFin = '2022-12-31'
-    BVN_df = yf.download('BVN', start=fechaInicio, end=fechaFin)
-    # Añadimos la terminación _BVN a cada columna
-    BVN_df.columns += "_BVN"
+def obtenerData(instrumentoFinanciero, fechaInicio, fechaFin):
+    IF_df = yf.download(instrumentoFinanciero,
+                        start=fechaInicio, end=fechaFin)
+    IF_df.columns += "_" + instrumentoFinanciero
     GLD_data = yf.download('GLD', start=fechaInicio, end=fechaFin)
     GLD_data.columns += "_GLD"
     SLV_data = yf.download('SLV', start=fechaInicio, end=fechaFin)
@@ -42,7 +35,7 @@ def trainingData():
     PEN_X_data.columns += "_PEN_X"
     BZ_F_data = yf.download('BZ=F', start=fechaInicio, end=fechaFin)
     BZ_F_data.columns += "_BZ_F"
-    df = pd.merge(BVN_df, GLD_data, on='Date')
+    df = pd.merge(IF_df, GLD_data, on='Date')
     df = pd.merge(df, SLV_data, on='Date')
     df = pd.merge(df, COPX_data, on='Date')
     df = pd.merge(df, GSPC_data, on='Date')
@@ -51,90 +44,49 @@ def trainingData():
     df = pd.merge(df, PEN_X_data, on='Date')
     df = pd.merge(df, BZ_F_data, on='Date')
     df = df.drop(['Volume_PEN_X'], axis=1)
+    return df
 
-    return df.sample(10)
+
+def transformarDataEntradaADataPrediccion(instrumentoFinanciero, fechaInicio, fechaFin):
+    df = obtenerData(instrumentoFinanciero, fechaInicio, fechaFin)
+    nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
+    df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
+    df['Return'] = df['Return'].fillna(0)
+    df['Trend'] = np.where(df['Return'] > 0.00, 1, 0)
+    df['Trend'] = df['Trend'].shift(-1)
+    df['Trend'] = df['Trend'].fillna(0)
+    df = df.dropna(how='any')
+    escala = StandardScaler()
+    X = escala.fit_transform(df.drop(['Trend', 'Return'], axis=1))
+    y = df['Trend']
+    return X, y
+
+
+def obtenerModeloSVC(instrumentoFinanciero, fechaInicio, fechaFin):
+    X, y = transformarDataEntradaADataPrediccion(
+        instrumentoFinanciero, fechaInicio, fechaFin)
+    modeloSVC = SVC().fit(X, y)
+    joblib.dump(modeloSVC, 'svc.pkl')
+    pklModeloSVC = joblib.load('prod/svc.pkl')
+    return pklModeloSVC
+
+
+def hacerPrediccion(instrumentoFinanciero, fechaInicioEntrenamiento, fechaFinEntrenamiento, fechaInicioPrediccion, fechaFinPrediccion):
+    modelo = obtenerModeloSVC(instrumentoFinanciero,
+                              fechaInicioEntrenamiento, fechaFinEntrenamiento)
+    X, y = transformarDataEntradaADataPrediccion(
+        instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion)
+    resultado = modelo.predict(X)
+    texto = []
+    listaFechas = [(fechaInicioPrediccion + timedelta(days=d)).strftime("%Y-%m-%d")
+                   for d in range((fechaFinPrediccion - fechaInicioPrediccion).days + 1)]
+    for i in range(0, resultado.size):
+        texto.append("*   Compra acciones el día " +
+                     listaFechas[i] if resultado[i] > 0 else "*   No compres acciones el día " + listaFechas[i])
+    return texto
 
 
 def plotHeatMap(dataframe):
     fig, ax = plt.subplots()
     sns.heatmap(dataframe.corr(), ax=ax)
     return fig
-
-
-def loadDataBetweenDates(fechaInicio, fechaFin):
-    BVN_df = yf.download('BVN', start=fechaInicio, end=fechaFin)
-    # Añadimos la terminación _BVN a cada columna
-    BVN_df.columns += "_BVN"
-    GLD_data = yf.download('GLD', start=fechaInicio, end=fechaFin)
-    GLD_data.columns += "_GLD"
-    SLV_data = yf.download('SLV', start=fechaInicio, end=fechaFin)
-    SLV_data.columns += "_SLV"
-    COPX_data = yf.download('COPX', start=fechaInicio, end=fechaFin)
-    COPX_data.columns += "_COPX"
-    GSPC_data = yf.download('^GSPC', start=fechaInicio, end=fechaFin)
-    GSPC_data.columns += "_GSPC"
-    IXIC_data = yf.download('^IXIC', start=fechaInicio, end=fechaFin)
-    IXIC_data.columns += "_IXIC"
-    DJI_data = yf.download('^DJI', start=fechaInicio, end=fechaFin)
-    DJI_data.columns += "_DJI"
-    PEN_X_data = yf.download('PEN=X', start=fechaInicio, end=fechaFin)
-    PEN_X_data.columns += "_PEN_X"
-    BZ_F_data = yf.download('BZ=F', start=fechaInicio, end=fechaFin)
-    BZ_F_data.columns += "_BZ_F"
-    df = pd.merge(BVN_df, GLD_data, on='Date')
-    df = pd.merge(df, SLV_data, on='Date')
-    df = pd.merge(df, COPX_data, on='Date')
-    df = pd.merge(df, GSPC_data, on='Date')
-    df = pd.merge(df, IXIC_data, on='Date')
-    df = pd.merge(df, DJI_data, on='Date')
-    df = pd.merge(df, PEN_X_data, on='Date')
-    df = pd.merge(df, BZ_F_data, on='Date')
-    df = df.drop(['Volume_PEN_X'], axis=1)
-    escala = StandardScaler()
-    df = escala.fit_transform(df)
-    return df
-
-
-def makePredition(fechaInicio, fechaFin):
-    modelo = loadModelo('prod/svc_bvn.pkl')
-    df = loadDataBetweenDates(fechaInicio, fechaFin)
-    result = predict(modelo, df)
-    len = result.size
-    return "Compra acciones este dia" if result[len-1] > 0 else "No compres acciones este dia"
-
-
-def noNormalizedData(fechaInicio, fechaFin):
-    BVN_df = yf.download('BVN', start=fechaInicio, end=fechaFin)
-    # Añadimos la terminación _BVN a cada columna
-    BVN_df.columns += "_BVN"
-    GLD_data = yf.download('GLD', start=fechaInicio, end=fechaFin)
-    GLD_data.columns += "_GLD"
-    SLV_data = yf.download('SLV', start=fechaInicio, end=fechaFin)
-    SLV_data.columns += "_SLV"
-    COPX_data = yf.download('COPX', start=fechaInicio, end=fechaFin)
-    COPX_data.columns += "_COPX"
-    GSPC_data = yf.download('^GSPC', start=fechaInicio, end=fechaFin)
-    GSPC_data.columns += "_GSPC"
-    IXIC_data = yf.download('^IXIC', start=fechaInicio, end=fechaFin)
-    IXIC_data.columns += "_IXIC"
-    DJI_data = yf.download('^DJI', start=fechaInicio, end=fechaFin)
-    DJI_data.columns += "_DJI"
-    PEN_X_data = yf.download('PEN=X', start=fechaInicio, end=fechaFin)
-    PEN_X_data.columns += "_PEN_X"
-    BZ_F_data = yf.download('BZ=F', start=fechaInicio, end=fechaFin)
-    BZ_F_data.columns += "_BZ_F"
-    df = pd.merge(BVN_df, GLD_data, on='Date')
-    df = pd.merge(df, SLV_data, on='Date')
-    df = pd.merge(df, COPX_data, on='Date')
-    df = pd.merge(df, GSPC_data, on='Date')
-    df = pd.merge(df, IXIC_data, on='Date')
-    df = pd.merge(df, DJI_data, on='Date')
-    df = pd.merge(df, PEN_X_data, on='Date')
-    df = pd.merge(df, BZ_F_data, on='Date')
-    df = df.drop(['Volume_PEN_X'], axis=1)
-    return df.tail(5)
-
-
-def predict(model, data):
-    df = model.predict(data)
-    return df
