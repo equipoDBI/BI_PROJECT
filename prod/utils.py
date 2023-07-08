@@ -122,8 +122,7 @@ def hacerPrediccion(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPredic
         retorno = resultado.pct_change()
         retorno = retorno.fillna(0)
         trend = np.where(retorno > 0.00, 1, 0)
-        trend = shift(trend, -1, cval=np.NaN)
-        trend = np.nan_to_num(trend)
+        trend = np.roll(trend, -1)
         for i in range(0, trend.size):
             texto.append("*   Compra acciones el día " +
                          listaFechas[i] if trend[i] > 0 else "*   No compres acciones el día " + listaFechas[i])
