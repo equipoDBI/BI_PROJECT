@@ -21,9 +21,9 @@ with st.sidebar:
     st.image(image)
     selected = option_menu(
         menu_title="Menú",
-        options=["Inicio", "LSTM", "SVC", "SVR", "Clustering K-Means"],
+        options=["Inicio", "LSTM", "SVC", "SVR"],
         icons=["house-fill", "1-circle-fill",
-               "2-circle-fill", "3-circle-fill", "4-circle-fill"],
+               "2-circle-fill", "3-circle-fill"],
         menu_icon="cast",
         default_index=0,
         styles={
@@ -46,7 +46,7 @@ if selected == "Inicio":
     st.markdown('*   Morales Robladillo, Nicole Maria - 20200136')
     st.markdown('*   Aquije Vásquez, Carlos Adrian - 19200319')
     st.markdown('*   Cespedes Flores, Sebastian - 1820025')
-elif selected == "LSTM" or selected == "Clustering K-Means":
+elif selected == "LSTM":
     st.title("Modelo de predicción " + selected)
 else:
     st.title("Modelo de predicción " + selected)
