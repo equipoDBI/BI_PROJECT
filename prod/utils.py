@@ -212,6 +212,7 @@ def obtenerGraficaRetornoAcumuladoVSEstrategico(instrumentoFinanciero, fechaInic
     if modelo == "SVR":
         df[nombreCloseInstrumentoFinanciero +
             '_Predicted'] = modeloEntrenado.predict(X)
+        
         df['Return'] = df[nombreCloseInstrumentoFinanciero +
                           '_Predicted'].pct_change()
         df['Return'] = df['Return'].fillna(0)
