@@ -80,7 +80,7 @@ else:
     st.table(dataParaPrediccion.tail(10))
     st.subheader('2.3. Predicciones')
     container = st.container()
-    resultados = hacerPrediccion(instrumentoFinanciero, fechaInicioEntrenamiento,
-                                 fechaFinEntrenamiento, fechaInicioPrediccion, fechaFinPrediccion, selected)
+    resultados = hacerPrediccion(
+        instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, selected)
     for i in resultados:
         st.write(i)
