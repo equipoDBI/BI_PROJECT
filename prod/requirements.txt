@@ -10,3 +10,4 @@ seaborn
 scipy
 scikit-learn
 yfinance
+keras
