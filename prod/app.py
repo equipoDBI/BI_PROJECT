@@ -123,7 +123,8 @@ elif selected == "LSTM":
     container = st.container()
     resultados = hacerPrediccion(
         instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, selected)
-    st.write(resultados)
+    for i in resultados:
+        st.write(resultados)
 else:
     st.title("Modelo de predicción " + selected)
     st.markdown(definiciones[selected])
