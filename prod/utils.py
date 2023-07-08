@@ -184,8 +184,8 @@ def obtenerGraficaRetornoAcumuladoVSEstrategicoParaLSTM(instrumentoFinanciero, f
     X, y = transformarDataEntradaADataPrediccion(
         instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo)
     df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
-    df['Return'] = df['BVN_Return'].shift(-1)
-    df['Return'] = df['BVN_Return'].fillna(0)
+    df['Return'] = df['Return'].shift(-1)
+    df['Return'] = df['Return'].fillna(0)
     X_size = X.size
     df_length = len(df.index)
     df = df[:df_length-X_size]
