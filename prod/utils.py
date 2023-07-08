@@ -172,7 +172,6 @@ def hacerPrediccion(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPredic
             texto.append("*   Compra acciones el día " +
                          listaFechas[i] if trend[i] > 0 else "*   No compres acciones el día " + listaFechas[i])
     if modelo == "LSTM":
-        resultado = pd.Series(resultado.reshape(-1))
         texto.append("*   Incremento de precio de acciones el dia " + listaFechas[-1] + " es: " + resultado[-1])
                          
     return texto
