@@ -187,8 +187,7 @@ def obtenerGraficaRetornoAcumuladoVSEstrategicoParaLSTM(instrumentoFinanciero, f
     df['Return'] = df['Return'].shift(-1)
     df['Return'] = df['Return'].fillna(0)
     X_size = X.size
-    df_length = len(df.index)
-    test_data = df[:(df_length-X_size)]
+    test_data = df.tail(X_size)
     print(modeloEntrenado.predict(X))
     test_data['Predicted'] = modeloEntrenado.predict(X)
 
