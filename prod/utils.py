@@ -69,6 +69,31 @@ def transformarDataEntradaADataPrediccion(instrumentoFinanciero, fechaInicio, fe
     return X, y
 
 
+def obtenerCorrelacionDeTrendConLosInputs(instrumentoFinanciero, fechaInicio, fechaFin):
+    df = obtenerData(instrumentoFinanciero, fechaInicio, fechaFin)
+    nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
+    df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
+    df['Return'] = df['Return'].fillna(0)
+    df['Trend'] = np.where(df['Return'] > 0.00, 1, 0)
+    df['Trend'] = df['Trend'].shift(-1)
+    df['Trend'] = df['Trend'].fillna(0)
+    df = df.dropna(how='any')
+    corr = df.corr()
+    return corr[['Trend']].sort_values(
+        by='Trend', ascending=False).style.background_gradient()
+
+
+def obtenerGraficaRetorno(instrumentoFinanciero, fechaInicio, fechaFin):
+    df = obtenerData(instrumentoFinanciero, fechaInicio, fechaFin)
+    nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
+    df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
+    df['Return'] = df['Return'].fillna(0)
+    fig = plt.figure()
+    plt.plot(df['Return'], color='green')
+    plt.xticks(rotation=45)
+    return fig
+
+
 def obtenerModelo(instrumentoFinanciero, modelo):
     pklModelo = joblib.load("prod/" + modelo + instrumentoFinanciero + '.pkl')
     return pklModelo
@@ -103,6 +128,35 @@ def hacerPrediccion(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPredic
             texto.append("*   Compra acciones el día " +
                          listaFechas[i] if trend[i] > 0 else "*   No compres acciones el día " + listaFechas[i])
     return texto
+
+
+def obtenerGraficaRetornoAcumuladoVSEstrategico(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo):
+    df = obtenerData(instrumentoFinanciero,
+                     fechaInicioPrediccion, fechaFinPrediccion)
+    nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
+    modeloEntrenado = obtenerModelo(instrumentoFinanciero, modelo)
+    X, y = transformarDataEntradaADataPrediccion(
+        instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo)
+    if modelo == "SVC":
+        df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
+        df['Predicted_Signal'] = modeloEntrenado.predict(X)
+    if modelo == "SVR":
+        df[nombreCloseInstrumentoFinanciero +
+            '_Predicted'] = modeloEntrenado.predict(X)
+        df['Return'] = df[nombreCloseInstrumentoFinanciero +
+                          '_Predicted'].pct_change()
+        df['Return'] = df['Return'].fillna(0)
+        df['Predicted_Signal'] = np.where(df['Return'] > 0.00, 1, 0)
+        df['Predicted_Signal'] = df['Predicted_Signal'].shift(-1)
+        df['Predicted_Signal'] = df['Predicted_Signal'].fillna(0)
+    df['Strategy_Return'] = df.Return * df.Predicted_Signal.shift(1)
+    df['Cum_Ret'] = df['Return'].cumsum()
+    df['Cum_Strategy'] = df['Strategy_Return'].cumsum()
+    fig = plt.figure()
+    plt.plot(df['Cum_Ret'], color='green')
+    plt.plot(df['Cum_Strategy'], color='yellow')
+    plt.xticks(rotation=45)
+    return fig
 
 
 def plotHeatMap(dataframe):
