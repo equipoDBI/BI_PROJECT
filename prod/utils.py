@@ -138,7 +138,7 @@ def obtenerGraficaRetorno(instrumentoFinanciero, fechaInicio, fechaFin):
 
 def obtenerModelo(instrumentoFinanciero, modelo):
     if modelo == "LSTM":
-        modeloEntrenado = tf.keras.models.load_model("prod/"+instrumentoFinanciero+"_"+modelo+".keras")
+        modeloEntrenado = tf.keras.models.load_model("prod/"+instrumentoFinanciero+"_"+modelo+".h5")
     else:
         modeloEntrenado = joblib.load("prod/" + modelo + instrumentoFinanciero + '.pkl')
     return modeloEntrenado
