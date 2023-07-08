@@ -74,7 +74,7 @@ def transformarDataEntradaADataPrediccion(instrumentoFinanciero, fechaInicio, fe
         y = df['Trend']
     if modelo == "LSTM":
         scaler = MinMaxScaler(feature_range=(0, 1))
-        scaled_test_data = scaler.transform(df)
+        scaled_test_data = scaler.fit_transform(df)
         X = create_sequences(scaled_test_data)
         y = []
         
