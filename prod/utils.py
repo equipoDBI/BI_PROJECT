@@ -188,43 +188,16 @@ def obtenerGraficaRetornoAcumuladoVSEstrategicoParaLSTM(instrumentoFinanciero, f
     df['Return'] = df['Return'].fillna(0)
     X_size = X.size
     df_length = len(df.index)
-    df = df[:df_length-X_size]
-    df['Predicted'] = modeloEntrenado.predict(X)
+    test_data = df[:df_length-X_size]
+    test_data['Predicted'] = modeloEntrenado.predict(X)
 
     fig = plt.figure()
-    plt.plot(df['Return'], color='green')
-    plt.plot(df['Predicted'], color='yellow')
+    plt.plot(test_data['Return'], color='green')
+    plt.plot(test_data['Predicted'], color='yellow')
     plt.xticks(rotation=45)
     return fig
 
 
-def obtenerGraficaRetornoAcumuladoVSEstrategico(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo):
-    df = obtenerData(instrumentoFinanciero,
-                     fechaInicioPrediccion, fechaFinPrediccion)
-    nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
-    modeloEntrenado = obtenerModelo(instrumentoFinanciero, modelo)
-    X, y = transformarDataEntradaADataPrediccion(
-        instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo)
-    if modelo == "SVC":
-        df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
-        df['Predicted_Signal'] = modeloEntrenado.predict(X)
-    if modelo == "SVR":
-        df[nombreCloseInstrumentoFinanciero +
-            '_Predicted'] = modeloEntrenado.predict(X)
-        df['Return'] = df[nombreCloseInstrumentoFinanciero +
-                          '_Predicted'].pct_change()
-        df['Return'] = df['Return'].fillna(0)
-        df['Predicted_Signal'] = np.where(df['Return'] > 0.00, 1, 0)
-        df['Predicted_Signal'] = df['Predicted_Signal'].shift(-1)
-        df['Predicted_Signal'] = df['Predicted_Signal'].fillna(0)
-    df['Strategy_Return'] = df.Return * df.Predicted_Signal.shift(1)
-    df['Cum_Ret'] = df['Return'].cumsum()
-    df['Cum_Strategy'] = df['Strategy_Return'].cumsum()
-    fig = plt.figure()
-    plt.plot(df['Cum_Ret'], color='green')
-    plt.plot(df['Cum_Strategy'], color='yellow')
-    plt.xticks(rotation=45)
-    return fig
 
 def obtenerGraficaRetornoAcumuladoVSEstrategico(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo):
     df = obtenerData(instrumentoFinanciero,
