@@ -11,7 +11,12 @@ from sklearn.preprocessing import StandardScaler
 from scipy import stats
 from sklearn.svm import SVC, SVR
 from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import MinMaxScaler
 from scipy.ndimage import shift
+from keras.models import Sequential
+from keras.layers import Dense 
+from keras.layers import Flatten 
+import tensorflow as tf
 # Importamos la librería nueva
 import yfinance as yf
 
@@ -48,6 +53,7 @@ def obtenerData(instrumentoFinanciero, fechaInicio, fechaFin):
     return df
 
 
+
 def transformarDataEntradaADataPrediccion(instrumentoFinanciero, fechaInicio, fechaFin, modelo):
     df = obtenerData(instrumentoFinanciero, fechaInicio, fechaFin)
     nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
@@ -66,8 +72,23 @@ def transformarDataEntradaADataPrediccion(instrumentoFinanciero, fechaInicio, fe
         df = df.dropna(how='any')
         X = escala.fit_transform(df.drop(['Trend', 'Return'], axis=1))
         y = df['Trend']
+    if modelo == "LSTM":
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaled_test_data = scaler.transform(df)
+        X = create_sequences(scaled_test_data)
+        y = []
+        
+
+        
     return X, y
 
+# Crear secuencias de tiempo para el modelo LSTM
+def create_sequences(data):
+    window_size = 100
+    x = []
+    for i in range( window_size , len(data) ):
+        x.append( data[i-window_size:i] )
+    return np.array(x)
 
 def obtenerCorrelacionDeTrendConLosInputs(instrumentoFinanciero, fechaInicio, fechaFin):
     df = obtenerData(instrumentoFinanciero, fechaInicio, fechaFin)
@@ -82,6 +103,27 @@ def obtenerCorrelacionDeTrendConLosInputs(instrumentoFinanciero, fechaInicio, fe
     return corr[['Trend']].sort_values(
         by='Trend', ascending=False).style.background_gradient()
 
+def obtenerCorrelacionDeReturnConLosInputsLSTM(instrumentoFinanciero, fechaInicio, fechaFin):
+    df = obtenerData(instrumentoFinanciero, fechaInicio, fechaFin)
+    nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
+    df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
+    df['Return'] = df['Return'].shift(-1)
+    df['Return'] = df['Return'].fillna(0)
+    df = df.dropna(how='any')
+    corr = df.corr()
+    return corr[['Return']].sort_values(
+        by='Return', ascending=False).style.background_gradient()
+def obtenerGraficaRetornoLSTM(instrumentoFinanciero, fechaInicio, fechaFin):
+    df = obtenerData(instrumentoFinanciero, fechaInicio, fechaFin)
+    nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
+    df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
+    df['Return'] = df['Return'].shift(-1)
+    df['Return'] = df['Return'].fillna(0)
+    fig = plt.figure()
+    plt.plot(df['Return'], color='green')
+    plt.xticks(rotation=45)
+    return fig
+
 
 def obtenerGraficaRetorno(instrumentoFinanciero, fechaInicio, fechaFin):
     df = obtenerData(instrumentoFinanciero, fechaInicio, fechaFin)
@@ -95,8 +137,11 @@ def obtenerGraficaRetorno(instrumentoFinanciero, fechaInicio, fechaFin):
 
 
 def obtenerModelo(instrumentoFinanciero, modelo):
-    pklModelo = joblib.load("prod/" + modelo + instrumentoFinanciero + '.pkl')
-    return pklModelo
+    if modelo != "LSTM":
+        modeloEntrenado = tf.keras.models.load_model("prod/"+instrumentoFinanciero+"_"+modelo+".keras")
+    else:
+        modeloEntrenado = joblib.load("prod/" + modelo + instrumentoFinanciero + '.pkl')
+    return modeloEntrenado
 
 
 def pct_change_numpy(arreglo):
@@ -127,7 +172,31 @@ def hacerPrediccion(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPredic
         for i in range(0, trend.size):
             texto.append("*   Compra acciones el día " +
                          listaFechas[i] if trend[i] > 0 else "*   No compres acciones el día " + listaFechas[i])
+    if modelo == "LSTM":
+        resultado = pd.Series(resultado)
+        texto.append("*   Incremento de precio de acciones el dia " + listaFechas[-1] + " es: " + resultado[-1])
+                         
     return texto
+def obtenerGraficaRetornoAcumuladoVSEstrategicoParaLSTM(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo):
+    df = obtenerData(instrumentoFinanciero,
+                     fechaInicioPrediccion, fechaFinPrediccion)
+    nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
+    modeloEntrenado = obtenerModelo(instrumentoFinanciero, modelo)
+    X, y = transformarDataEntradaADataPrediccion(
+        instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo)
+    df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
+    df['Return'] = df['BVN_Return'].shift(-1)
+    df['Return'] = df['BVN_Return'].fillna(0)
+    X_size = X.size
+    df_length = len(df.index)
+    df = df[:df_length-X_size]
+    df['Predicted'] = modeloEntrenado.predict(X)
+
+    fig = plt.figure()
+    plt.plot(df['Return'], color='green')
+    plt.plot(df['Predicted'], color='yellow')
+    plt.xticks(rotation=45)
+    return fig
 
 
 def obtenerGraficaRetornoAcumuladoVSEstrategico(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo):
@@ -158,6 +227,33 @@ def obtenerGraficaRetornoAcumuladoVSEstrategico(instrumentoFinanciero, fechaInic
     plt.xticks(rotation=45)
     return fig
 
+def obtenerGraficaRetornoAcumuladoVSEstrategico(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo):
+    df = obtenerData(instrumentoFinanciero,
+                     fechaInicioPrediccion, fechaFinPrediccion)
+    nombreCloseInstrumentoFinanciero = "Close_" + instrumentoFinanciero
+    modeloEntrenado = obtenerModelo(instrumentoFinanciero, modelo)
+    X, y = transformarDataEntradaADataPrediccion(
+        instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo)
+    if modelo == "SVC":
+        df['Return'] = df[nombreCloseInstrumentoFinanciero].pct_change()
+        df['Predicted_Signal'] = modeloEntrenado.predict(X)
+    if modelo == "SVR":
+        df[nombreCloseInstrumentoFinanciero +
+            '_Predicted'] = modeloEntrenado.predict(X)
+        df['Return'] = df[nombreCloseInstrumentoFinanciero +
+                          '_Predicted'].pct_change()
+        df['Return'] = df['Return'].fillna(0)
+        df['Predicted_Signal'] = np.where(df['Return'] > 0.00, 1, 0)
+        df['Predicted_Signal'] = df['Predicted_Signal'].shift(-1)
+        df['Predicted_Signal'] = df['Predicted_Signal'].fillna(0)
+    df['Strategy_Return'] = df.Return * df.Predicted_Signal.shift(1)
+    df['Cum_Ret'] = df['Return'].cumsum()
+    df['Cum_Strategy'] = df['Strategy_Return'].cumsum()
+    fig = plt.figure()
+    plt.plot(df['Cum_Ret'], color='green')
+    plt.plot(df['Cum_Strategy'], color='yellow')
+    plt.xticks(rotation=45)
+    return fig
 
 def plotHeatMap(dataframe):
     fig, ax = plt.subplots()
