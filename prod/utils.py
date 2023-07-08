@@ -69,14 +69,7 @@ def transformarDataEntradaADataPrediccion(instrumentoFinanciero, fechaInicio, fe
     return X, y
 
 
-def obtenerModelo(instrumentoFinanciero, fechaInicio, fechaFin, modelo):
-    X, y = transformarDataEntradaADataPrediccion(
-        instrumentoFinanciero, fechaInicio, fechaFin, modelo)
-    if modelo == "SVC":
-        modeloEntrenado = SVC().fit(X, y)
-    if modelo == "SVR":
-        modeloEntrenado = SVR().fit(X, y)
-    joblib.dump(modeloEntrenado, modelo + '.pkl')
+def obtenerModelo(instrumentoFinanciero, modelo):
     pklModelo = joblib.load("prod/" + modelo + instrumentoFinanciero + '.pkl')
     return pklModelo
 
@@ -87,9 +80,8 @@ def pct_change_numpy(arreglo):
         arreglo_pct_change[i] = (arreglo[i] - arreglo[i-1])/arreglo[i]
 
 
-def hacerPrediccion(instrumentoFinanciero, fechaInicioEntrenamiento, fechaFinEntrenamiento, fechaInicioPrediccion, fechaFinPrediccion, modelo):
-    modeloEntrenado = obtenerModelo(instrumentoFinanciero,
-                                    fechaInicioEntrenamiento, fechaFinEntrenamiento, modelo)
+def hacerPrediccion(instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo):
+    modeloEntrenado = obtenerModelo(instrumentoFinanciero, modelo)
     X, y = transformarDataEntradaADataPrediccion(
         instrumentoFinanciero, fechaInicioPrediccion, fechaFinPrediccion, modelo)
     resultado = modeloEntrenado.predict(X)
