@@ -101,9 +101,7 @@ elif selected == "LSTM":
         instrumentoFinanciero, fechaInicioEntrenamiento, fechaFinEntrenamiento))
     st.header('2. Predicción')
     st.subheader('2.1. Ingreso de datos')
-    fechaInicioPrediccion = st.date_input(
-        "Fecha inicio para la predicción",
-        datetime.date(2022, 6, 8))
+    fechaInicioPrediccion = datetime.date(2022, 6, 8)
     fechaFinPrediccion = st.date_input(
         "Fecha fin para la predicción",
         datetime.date(2023, 7, 7))
