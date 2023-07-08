@@ -77,7 +77,7 @@ def obtenerModelo(instrumentoFinanciero, fechaInicio, fechaFin, modelo):
     if modelo == "SVR":
         modeloEntrenado = SVR().fit(X, y)
     joblib.dump(modeloEntrenado, modelo + '.pkl')
-    pklModelo = joblib.load("prod/" + modelo + '.pkl')
+    pklModelo = joblib.load("prod/" + modelo + instrumentoFinanciero + '.pkl')
     return pklModelo
 
 
