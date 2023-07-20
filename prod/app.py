@@ -41,7 +41,7 @@ if selected == "Inicio":
     image = Image.open('prod/MachineLearningStocksMarket.png')
     st.image(image)
     st.markdown('**Curso:** Inteligencia de Negocios')
-    st.markdown('**Docente Líder del Proyecto:** Mg. Ing. Ernesto Cancho-Rodríguez, MBA de la George Washington University')
+    st.markdown('**Docente Líder del Proyecto:** Mg. Ing. Ernesto Cancho-Rodríguez, MBA de la George Washington University ecr@gwu.edu')
     st.markdown('**Equipo:** Equipo D')
     st.markdown('**Integrantes:**')
     st.markdown('*   Hurtado Santos, Estiven Salvador - 20200135')
