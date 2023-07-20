@@ -1,6 +1,4 @@
 # BI_PROJECT
-This is the project D for BI course at UNMSM 2023I
-
 Curso: Inteligencia de Negocios
 
 Docente Líder del Proyecto: Mg. Ing. Ernesto Cancho-Rodríguez, MBA de la George Washington University ecr@gwu.edu
@@ -16,3 +14,5 @@ Mondragón Zúñiga, Rubén Alberto - 20200082
 Morales Robladillo, Nicole Maria - 20200136
 Aquije Vásquez, Carlos Adrian - 19200319
 Cespedes Flores, Sebastian - 1820025
+
+This is the project for the BI course at UNMSM 2023-I
